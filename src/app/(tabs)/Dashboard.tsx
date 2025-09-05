@@ -1,43 +1,45 @@
 // src/screens/Dashboard.tsx
+import { LoadingSpinner } from "@/src/components/LoadingSpinner";
+import { TaskCard } from "@/src/components/TaskCard";
+import { TaskForm } from "@/src/components/TaskForm";
+import { AppDispatch, RootState } from "@/src/store/index";
+import {
+  addTask,
+  fetchInitialTasks,
+  setFilter,
+  setSort,
+  updateTask,
+} from "@/src/store/slices/taskSlice";
+import { Task, TaskFilter } from "@/src/types/index";
+import { scale } from "@/src/utils/Responsive";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 import React, {
+  useCallback,
   useEffect,
   useMemo,
-  useCallback,
   useRef,
   useState,
 } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  RefreshControl,
-  StatusBar,
-  FlatList,
-  Dimensions,
   Alert,
   Animated,
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import BottomSheet, { BottomSheetView, BottomSheetModal, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { RootState, AppDispatch } from "@/src/store/index";
-import {
-  fetchInitialTasks,
-  setFilter,
-  setSort,
-  toggleTaskStatus,
-  updateTask,
-  addTask,
-} from "@/src/store/slices/taskSlice";
-import { TaskCard } from "@/src/components/TaskCard";
-import { LoadingSpinner } from "@/src/components/LoadingSpinner";
-import { TaskForm } from "@/src/components/TaskForm";
-import { Task, TaskFilter, TaskSort } from "@/src/types/index";
-import { formatDate } from "@/src/utils/dateUtils";
-import { router } from "expo-router";
-import { scale } from "@/src/utils/Responsive";
+import { useDispatch, useSelector } from "react-redux";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -90,10 +92,7 @@ const AnimatedTaskCard = React.memo(
       <Animated.View
         style={{
           opacity: fadeAnim,
-          transform: [
-            { translateY: slideAnim },
-            { scale: scaleAnim },
-          ],
+          transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
         }}
       >
         <TaskCard
@@ -108,60 +107,59 @@ const AnimatedTaskCard = React.memo(
 );
 
 // Animated Empty State Component
-const AnimatedEmptyState = React.memo(({ filter }: { filter: TaskFilter }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(40)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+const AnimatedEmptyState = React.memo(
+  ({ filter }: { filter: TaskFilter }) => {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(40)).current;
+    const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+    useEffect(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, []);
 
-  return (
-    <Animated.View
-      style={{
-        opacity: fadeAnim,
-        transform: [
-          { translateY: slideAnim },
-          { scale: scaleAnim },
-        ],
-      }}
-      className="items-center py-12"
-    >
-      <View className="bg-white rounded-2xl p-8 items-center shadow-sm border border-gray-100">
-        <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
-          <Text className="text-3xl">📝</Text>
+    return (
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+        }}
+        className="items-center py-12"
+      >
+        <View className="bg-white rounded-2xl p-8 items-center shadow-sm border border-gray-100">
+          <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+            <Text className="text-3xl">📝</Text>
+          </View>
+          <Text className="text-gray-500 text-center text-lg mb-2 font-medium">
+            {filter === "all"
+              ? "No tasks for this date"
+              : `No ${filter} tasks`}
+          </Text>
+          <Text className="text-gray-400 text-center text-sm">
+            {filter === "all"
+              ? "Tap the + button to create your first task"
+              : "Try changing the filter or create a new task"}
+          </Text>
         </View>
-        <Text className="text-gray-500 text-center text-lg mb-2 font-medium">
-          {filter === "all"
-            ? "No tasks for this date"
-            : `No ${filter} tasks`}
-        </Text>
-        <Text className="text-gray-400 text-center text-sm">
-          {filter === "all"
-            ? "Tap the + button to create your first task"
-            : "Try changing the filter or create a new task"}
-        </Text>
-      </View>
-    </Animated.View>
-  );
-});
+      </Animated.View>
+    );
+  }
+);
 
 // Animated Filter Button Component
 const AnimatedFilterButton = React.memo(
@@ -183,7 +181,7 @@ const AnimatedFilterButton = React.memo(
 
     useEffect(() => {
       const delay = index * 50;
-      
+
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -264,7 +262,7 @@ const AnimatedCalendarDay = React.memo(
 
     useEffect(() => {
       const delay = index * 30;
-      
+
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -445,8 +443,12 @@ const Dashboard: React.FC = () => {
   // Calculate task counts for selected date
   const taskCounts = useMemo(() => {
     const total = tasksForSelectedDate.length;
-    const completed = tasksForSelectedDate.filter((t) => t.completed).length;
-    const incomplete = tasksForSelectedDate.filter((t) => !t.completed).length;
+    const completed = tasksForSelectedDate.filter(
+      (t) => t.completed
+    ).length;
+    const incomplete = tasksForSelectedDate.filter(
+      (t) => !t.completed
+    ).length;
 
     return {
       all: total,
@@ -498,8 +500,8 @@ const Dashboard: React.FC = () => {
       });
 
       // Trigger animation when tasks change
-      setAnimationKey(prev => prev + 1);
-      
+      setAnimationKey((prev) => prev + 1);
+
       return sorted;
     } catch (error) {
       console.error("Error filtering and sorting tasks:", error);
@@ -584,7 +586,10 @@ const Dashboard: React.FC = () => {
 
         if (selectedIndex !== -1) {
           const dayWidth = 56; // Approximate width of each day
-          const scrollPosition = Math.max(0, (selectedIndex - 3) * dayWidth);
+          const scrollPosition = Math.max(
+            0,
+            (selectedIndex - 3) * dayWidth
+          );
 
           calendarScrollRef.current?.scrollTo({
             x: scrollPosition,
@@ -594,7 +599,8 @@ const Dashboard: React.FC = () => {
 
         // Update calendar range if selected date is too far from current range
         const daysDiff = Math.abs(
-          (date.getTime() - calendarStartDate.getTime()) / (1000 * 60 * 60 * 24)
+          (date.getTime() - calendarStartDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
 
         if (daysDiff > 35) {
@@ -618,7 +624,10 @@ const Dashboard: React.FC = () => {
       });
     } catch (error) {
       console.error("Navigation error:", error);
-      Alert.alert("Error", "Failed to open task details. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to open task details. Please try again."
+      );
     }
   }, []);
 
@@ -729,7 +738,12 @@ const Dashboard: React.FC = () => {
         isLast={index === filteredAndSortedTasks.length - 1}
       />
     ),
-    [handleTaskPress, handleToggleComplete, filteredAndSortedTasks.length, animationKey]
+    [
+      handleTaskPress,
+      handleToggleComplete,
+      filteredAndSortedTasks.length,
+      animationKey,
+    ]
   );
 
   const keyExtractor = useCallback((item: Task) => `task-${item.id}`, []);
@@ -885,7 +899,9 @@ const Dashboard: React.FC = () => {
                   initialNumToRender={8}
                   scrollEnabled={false}
                   showsVerticalScrollIndicator={false}
-                  ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
+                  ItemSeparatorComponent={() => (
+                    <View style={{ height: 0 }} />
+                  )}
                 />
               </View>
             )}
